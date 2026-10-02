@@ -58,3 +58,9 @@ keymap("v", "J", ":m '>+1<CR>gv=gv", { desc = "Move current line in visual mode 
 keymap("v", "K", ":m '<-2<CR>gv=gv", { desc = "Move current line in visual mode up by one (Primeagen on master.dev)" })
 
 
+
+-- neoroam (backlinks)
+keymap("n", "<leader>nb", "<cmd>NeoroamBacklinks<cr>", { desc = "Toggle backlinks panel" })
+keymap("n", "<leader>nf", "<cmd>NeoroamFollow<cr>", { desc = "Follow note link under cursor" })
+keymap("n", "<leader>ni", "<cmd>NeoroamInsert<cr>", { desc = "Insert note link" })
+keymap("n", "<leader>nn", "<cmd>NeoroamNew<cr>", { desc = "New note" })
