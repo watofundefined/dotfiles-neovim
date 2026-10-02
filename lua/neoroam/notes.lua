@@ -129,24 +129,32 @@ local function create(dir, folder, title)
   vim.cmd("startinsert")
 end
 
+--- Pick a folder (only if the notes root has sub-folders), then a title.
+--- <Esc>, <C-c> or an empty title cancels.
 function M.new()
   local dir = scope.dir(vim.api.nvim_buf_get_name(0))
-  vim.ui.input({ prompt = "Note title: " }, function(input)
-    local title = input and vim.trim(input) or ""
-    if title == "" then
-      return
-    end
-    local subs = subfolders(dir)
-    if #subs == 0 then
-      return create(dir, nil, title)
-    end
-    local choices = vim.list_extend({ "(top level)" }, subs)
-    vim.ui.select(choices, { prompt = "Folder:" }, function(choice)
-      if not choice then
-        return
+
+  local function ask_title(folder)
+    local where = folder and (folder .. "/") or ""
+    vim.ui.input({ prompt = "Note title (" .. where .. ", <Esc> or empty to cancel): " }, function(input)
+      local title = input and vim.trim(input) or ""
+      if title == "" then
+        return notify("new note cancelled")
       end
-      create(dir, choice ~= "(top level)" and choice or nil, title)
+      create(dir, folder, title)
     end)
+  end
+
+  local subs = subfolders(dir)
+  if #subs == 0 then
+    return ask_title(nil)
+  end
+  local choices = vim.list_extend({ "(top level)" }, subs)
+  vim.ui.select(choices, { prompt = "Folder:" }, function(choice)
+    if not choice then
+      return notify("new note cancelled")
+    end
+    ask_title(choice ~= "(top level)" and choice or nil)
   end)
 end
 

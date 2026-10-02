@@ -3,7 +3,7 @@ local M = {}
 local defaults = {
   notes_root = nil, -- relative to the git root; falls back to vim.g.neoroam_notes_root
   preview_lines = 3,
-  panel_width = 45,
+  panel_width = 60,
   debounce_ms = 150,
 }
 

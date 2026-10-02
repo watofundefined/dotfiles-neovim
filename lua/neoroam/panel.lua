@@ -2,12 +2,20 @@
 local config = require("neoroam.config")
 local frontmatter = require("neoroam.frontmatter")
 local preview = require("neoroam.preview")
+local render_text = require("neoroam.render")
 local rg = require("neoroam.rg")
 local scope = require("neoroam.scope")
 
 local M = {}
 
 local ns = vim.api.nvim_create_namespace("neoroam")
+local PREFIX = "│ "
+
+vim.api.nvim_set_hl(0, "NeoroamHeading", { link = "Title", default = true })
+vim.api.nvim_set_hl(0, "NeoroamPath", { link = "Comment", default = true })
+vim.api.nvim_set_hl(0, "NeoroamLink", { link = "Underlined", default = true })
+vim.api.nvim_set_hl(0, "NeoroamCurrentLink", { bold = true, underline = true, default = true })
+
 local S = { buf = nil, win = nil, seq = 0, job = nil, timer = nil, rows = {}, note_win = nil, group = nil }
 
 local function valid_win()
@@ -30,11 +38,11 @@ local function set_lines(lines, hl)
   vim.bo[S.buf].modifiable = false
   vim.api.nvim_buf_clear_namespace(S.buf, ns, 0, -1)
   for _, h in ipairs(hl or {}) do
-    vim.api.nvim_buf_set_extmark(S.buf, ns, h[1], 0, { end_col = #lines[h[1] + 1], hl_group = h[2] })
+    vim.api.nvim_buf_set_extmark(S.buf, ns, h[1], h[2], { end_col = h[3], hl_group = h[4] })
   end
 end
 
-local function render(title, hits, scope_dir)
+local function render(title, id, hits, scope_dir)
   local max = config.get().preview_lines
   local by_path, order = {}, {}
   for _, h in ipairs(hits) do
@@ -52,32 +60,43 @@ local function render(title, hits, scope_dir)
   end)
 
   local lines, hl, rows = {}, {}, {}
-  local function add(text, group, row)
+  -- spans: { start, finish, group } byte columns; `group` alone highlights the whole line
+  local function add(text, group, row, spans, offset)
     lines[#lines + 1] = text
     rows[#lines] = row
     if group then
-      hl[#hl + 1] = { #lines - 1, group }
+      hl[#hl + 1] = { #lines - 1, 0, #text, group }
+    end
+    for _, sp in ipairs(spans or {}) do
+      hl[#hl + 1] = { #lines - 1, sp[1] + offset, sp[2] + offset, sp[3] }
     end
   end
-  add(string.format("Backlinks: %s (%d)", title, #hits), "Title")
+  add(string.format("Backlinks: %s (%d)", title, #hits), "NeoroamHeading")
   for _, g in ipairs(order) do
     table.sort(g.hits, function(a, b)
       return a.lnum < b.lnum
     end)
     local src = vim.fn.readfile(g.path)
-    add("", nil)
-    add(string.format("%s  [%s]", g.title, g.path:sub(#scope_dir + 2)), "Directory", g.hits[1])
+    add("")
+    add(g.title, "NeoroamHeading", g.hits[1])
+    add(g.path:sub(#scope_dir + 2), "NeoroamPath", g.hits[1])
     for _, h in ipairs(g.hits) do
       local b = preview.block(src, h.lnum, max)
-      for i, l in ipairs(b.lines) do
-        local n = b.start + i - 1
-        add(string.format("%4d%s %s", n, n == h.lnum and ">" or " ", l), n == h.lnum and nil or "Comment", h)
+      add("", nil, h)
+      add(string.format("line %d", h.lnum), "NeoroamPath", h)
+      for _, l in ipairs(b.lines) do
+        local text, spans = render_text.preview_line(l, id)
+        for _, sp in ipairs(spans) do
+          sp[3] = sp[3] == "current" and "NeoroamCurrentLink" or "NeoroamLink"
+        end
+        add(PREFIX .. text, nil, h, spans, #PREFIX)
+        hl[#hl + 1] = { #lines - 1, 0, #PREFIX, "NeoroamPath" }
       end
     end
   end
   if #hits == 0 then
-    add("", nil)
-    add("No backlinks.", "Comment")
+    add("")
+    add("No backlinks.", "NeoroamPath")
   end
   S.rows = rows
   set_lines(lines, hl)
@@ -85,7 +104,7 @@ end
 
 local function message(msg)
   S.rows = {}
-  set_lines({ msg }, { { 0, "Comment" } })
+  set_lines({ msg }, { { 0, 0, #msg, "NeoroamPath" } })
 end
 
 local function do_refresh(src_buf, src_win)
@@ -113,7 +132,7 @@ local function do_refresh(src_buf, src_win)
     if err then
       return message("Error: " .. tostring(err))
     end
-    render(title, hits, dir)
+    render(title, fm.id, hits, dir)
   end)
 end
 
@@ -197,7 +216,8 @@ function M.open()
   vim.bo[S.buf].buftype = "nofile"
   vim.bo[S.buf].bufhidden = "wipe"
   vim.bo[S.buf].swapfile = false
-  vim.bo[S.buf].filetype = "neoroam-backlinks"
+  vim.bo[S.buf].filetype = "neoroam"
+  vim.b[S.buf].neoroam_panel = true
   vim.bo[S.buf].modifiable = false
   for k, v in pairs({ number = false, relativenumber = false, signcolumn = "no", wrap = true, winfixwidth = true, cursorline = true }) do
     vim.wo[S.win][k] = v

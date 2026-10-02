@@ -5,4 +5,4 @@ require("plugins")
 -- load plugins before keymaps
 require("keymaps")
 
-require("neoroam").setup()
+require("neoroam").setup({ notes_root = "Roam" })
