@@ -7,6 +7,7 @@ opt.cursorline = true
 opt.termguicolors = true
 opt.signcolumn = "yes"
  
+-- vim.cmd [[colorscheme slate]]
 vim.cmd [[colorscheme unokai]]
  
 -- Search
