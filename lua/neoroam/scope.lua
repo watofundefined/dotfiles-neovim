@@ -1,4 +1,6 @@
 -- Where notes live: <git root of the buffer, else cwd>[/<notes_root>].
+-- Tested on macOS. Paths are compared with "/" separators and case-sensitively,
+-- so on Windows (backslashes from fs_realpath, drive-letter case) notes may not be detected.
 local config = require("neoroam.config")
 
 local M = {}

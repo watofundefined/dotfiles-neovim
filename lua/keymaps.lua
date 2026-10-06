@@ -18,15 +18,48 @@ local function close_other_buffers()
     end
 end
 
-local function delete_file_to_recycle_bin()
+local is_win = vim.fn.has("win32") == 1
+local is_mac = vim.fn.has("mac") == 1
+local trash_name = is_win and "Recycle Bin" or "Trash"
+
+-- Returns the command that moves `path` to the OS trash, or nil if none is available.
+local function trash_cmd(path)
+    if is_win then
+        local ps_cmd = string.format(
+            "Add-Type -AssemblyName Microsoft.VisualBasic; " ..
+            "[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile('%s', 'OnlyErrorDialogs', 'SendToRecycleBin')",
+            (path:gsub("'", "''"))
+        )
+        return { "powershell", "-NoProfile", "-NonInteractive", "-Command", ps_cmd }
+    end
+    if is_mac then
+        if vim.fn.executable("trash") == 1 then -- built in since macOS 14
+            return { "trash", path }
+        end
+        local escaped = path:gsub("\\", "\\\\"):gsub('"', '\\"')
+        return { "osascript", "-e", string.format('tell application "Finder" to delete POSIX file "%s"', escaped) }
+    end
+    if vim.fn.executable("gio") == 1 then
+        return { "gio", "trash", path }
+    end
+    if vim.fn.executable("trash-put") == 1 then
+        return { "trash-put", path }
+    end
+    if vim.fn.executable("kioclient") == 1 then
+        return { "kioclient", "move", path, "trash:/" }
+    end
+    return nil
+end
+
+local function delete_file_to_trash()
     local filepath = vim.api.nvim_buf_get_name(0)
     if filepath == "" then
-        vim.notify("delete_file_to_recycle_bin: buffer has no file", vim.log.levels.WARN)
+        vim.notify("delete_file_to_trash: buffer has no file", vim.log.levels.WARN)
         return
     end
 
     local choice = vim.fn.confirm(
-        "Delete '" .. vim.fn.fnamemodify(filepath, ":t") .. "' and send to Recycle Bin?",
+        "Delete '" .. vim.fn.fnamemodify(filepath, ":t") .. "' and send to " .. trash_name .. "?",
         "&Yes\n&No",
         2
     )
@@ -34,19 +67,27 @@ local function delete_file_to_recycle_bin()
         return
     end
 
-    local ps_cmd = string.format(
-        "Add-Type -AssemblyName Microsoft.VisualBasic; " ..
-        "[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile('%s', 'OnlyErrorDialogs', 'SendToRecycleBin')",
-        filepath:gsub("'", "''")
-    )
-    local result = vim.fn.system({ "powershell", "-NoProfile", "-NonInteractive", "-Command", ps_cmd })
-    if vim.v.shell_error ~= 0 then
-        vim.notify("Failed to delete file:\n" .. result, vim.log.levels.ERROR)
-        return
+    local cmd = trash_cmd(filepath)
+    if cmd then
+        local result = vim.fn.system(cmd)
+        if vim.v.shell_error ~= 0 then
+            vim.notify("Failed to delete file:\n" .. result, vim.log.levels.ERROR)
+            return
+        end
+    else
+        local permanent = vim.fn.confirm("No trash command found. Delete '" .. vim.fn.fnamemodify(filepath, ":t") .. "' permanently?", "&Yes\n&No", 2)
+        if permanent ~= 1 then
+            return
+        end
+        local ok, err = os.remove(filepath)
+        if not ok then
+            vim.notify("Failed to delete file:\n" .. tostring(err), vim.log.levels.ERROR)
+            return
+        end
     end
 
     vim.cmd("bdelete!")
-    vim.notify("Deleted (sent to Recycle Bin): " .. filepath, vim.log.levels.INFO)
+    vim.notify("Deleted" .. (cmd and (" (sent to " .. trash_name .. ")") or " permanently") .. ": " .. filepath, vim.log.levels.INFO)
 end
 
 local function rename_file()
@@ -115,8 +156,8 @@ vim.g.mapleader = " "
  
 -- Save file
 keymap("n", "<leader>fs", "<cmd>w<cr>")
--- Delete current file (sends to Recycle Bin), with confirmation
-keymap("n", "<leader>fd", delete_file_to_recycle_bin, { desc = "Delete current file to Recycle Bin" })
+-- Delete current file (sends to Recycle Bin / Trash), with confirmation
+keymap("n", "<leader>fd", delete_file_to_trash, { desc = "Delete current file to " .. trash_name })
 -- Rename current file, prompts for new filename
 keymap("n", "<leader>fr", rename_file, { desc = "Rename current file" })
 -- Close window
@@ -177,7 +218,7 @@ keymap("n", "<leader>qj", "<cmd>cnext<cr>", { desc = "Go to next quick fix list 
 keymap("n", "<leader>qk", "<cmd>cprev<cr>", { desc = "Go to previous quick fix list result" })
 
 keymap("v", "<leader>p", '"_dP', { desc = "Paste without losing current register (Primeagen on master.dev)" })
-keymap("v", "<leader>y", "+y", { desc = "Yank into system clipboard if user doesn't have system clipboard on (Primeagen on master.dev)" })
+keymap("v", "<leader>y", '"+y', { desc = "Yank into system clipboard if user doesn't have system clipboard on (Primeagen on master.dev)" })
 -- gv re-highlights the previous visual selection
 keymap("v", "J", ":m '>+1<CR>gv=gv", { desc = "Move current line in visual mode down by one (Primeagen on master.dev)" })
 keymap("v", "K", ":m '<-2<CR>gv=gv", { desc = "Move current line in visual mode up by one (Primeagen on master.dev)" })
