@@ -130,6 +130,16 @@ require("lazy").setup({
           vim.treesitter.start()
         end,
       })
+
+      -- Treesitter folds for Markdown (headings, lists, code blocks) so zc/zo/za work
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = "markdown",
+        callback = function()
+          vim.wo[0][0].foldmethod = "expr"
+          vim.wo[0][0].foldexpr = "v:lua.vim.treesitter.foldexpr()"
+          vim.wo[0][0].foldlevel = 99 -- start with everything open
+        end,
+      })
     end,
   },
 
