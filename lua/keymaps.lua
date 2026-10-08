@@ -178,16 +178,26 @@ local function copy_relative_path_from_git_root()
         return
     end
 
-    local root = vim.trim(result.stdout)
-    local full = vim.fn.fnamemodify(path, ":p")
-    -- resolve symlinks (e.g. /tmp -> /private/tmp) so the root prefix matches
-    root = vim.fn.resolve(root)
-    full = vim.fn.resolve(full)
-    if full:sub(1, #root + 1) ~= root .. "/" then
+    -- git prints forward slashes ("C:/repo"); nvim buffer names on Windows use backslashes,
+    -- so normalize both (and resolve symlinks, e.g. /tmp -> /private/tmp) before comparing
+    local function norm(p)
+        return vim.fs.normalize(vim.fn.resolve(p))
+    end
+    local root = norm(vim.trim(result.stdout))
+    local full = norm(vim.fn.fnamemodify(path, ":p"))
+    -- Windows paths are case-insensitive (drive letter case often differs)
+    local is_windows = vim.fn.has("win32") == 1
+    local cmp_root = is_windows and root:lower() or root
+    local cmp_full = is_windows and full:lower() or full
+    if cmp_full:sub(1, #cmp_root + 1) ~= cmp_root .. "/" then
         return
     end
 
-    copy_to_clipboard(full:sub(#root + 2), "relative path")
+    local relative = full:sub(#root + 2)
+    if is_windows then
+        relative = relative:gsub("/", "\\")
+    end
+    copy_to_clipboard(relative, "relative path")
 end
 
 vim.g.mapleader = " "
