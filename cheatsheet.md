@@ -14,6 +14,14 @@ Inside the tree, `<Esc>` returns focus to the previous window (or the first regu
 
 Press `?` inside the tree for its own mappings (add, delete, rename, copy, move...).
 
+## Copy file paths
+
+| Key             | What it does                                                    |
+|-----------------|-----------------------------------------------------------------|
+| `<leader>cff`   | Copy the current filename                                       |
+| `<leader>cfa`   | Copy the full path of the current file                          |
+| `<leader>cfr`   | Copy the path relative to the git root (no-op outside a repo)   |
+
 ## Notes plugin (`neoroam`)
 
 Org-roam-style backlinks for Markdown notes. Design: [ADR-0001](docs/adr/0001-roam-style-backlinks.md).

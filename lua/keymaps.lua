@@ -152,6 +152,44 @@ local function run_git_action(action)
     end)
 end
 
+local function copy_to_clipboard(text, label)
+    vim.fn.setreg("+", text)
+    vim.notify("Copied " .. label .. ": " .. text, vim.log.levels.INFO)
+end
+
+local function current_file_path()
+    local path = vim.api.nvim_buf_get_name(0)
+    if path == "" then
+        vim.notify("Current buffer has no file", vim.log.levels.WARN)
+        return nil
+    end
+    return path
+end
+
+local function copy_relative_path_from_git_root()
+    local path = current_file_path()
+    if not path then
+        return
+    end
+
+    local dir = vim.fn.fnamemodify(path, ":p:h")
+    local result = vim.system({ "git", "-C", dir, "rev-parse", "--show-toplevel" }, { text = true }):wait()
+    if result.code ~= 0 then
+        return
+    end
+
+    local root = vim.trim(result.stdout)
+    local full = vim.fn.fnamemodify(path, ":p")
+    -- resolve symlinks (e.g. /tmp -> /private/tmp) so the root prefix matches
+    root = vim.fn.resolve(root)
+    full = vim.fn.resolve(full)
+    if full:sub(1, #root + 1) ~= root .. "/" then
+        return
+    end
+
+    copy_to_clipboard(full:sub(#root + 2), "relative path")
+end
+
 vim.g.mapleader = " "
  
 -- Save file
@@ -160,6 +198,16 @@ keymap("n", "<leader>fs", "<cmd>w<cr>")
 keymap("n", "<leader>fd", delete_file_to_trash, { desc = "Delete current file to " .. trash_name })
 -- Rename current file, prompts for new filename
 keymap("n", "<leader>fr", rename_file, { desc = "Rename current file" })
+-- Copy current filename / full path / path relative to git root (no-op outside git)
+keymap("n", "<leader>cff", function()
+    local path = current_file_path()
+    if path then copy_to_clipboard(vim.fn.fnamemodify(path, ":t"), "filename") end
+end, { desc = "Copy current filename" })
+keymap("n", "<leader>cfa", function()
+    local path = current_file_path()
+    if path then copy_to_clipboard(vim.fn.fnamemodify(path, ":p"), "full path") end
+end, { desc = "Copy full path of current file" })
+keymap("n", "<leader>cfr", copy_relative_path_from_git_root, { desc = "Copy file path relative to git root" })
 -- Close window
 keymap("n", "<leader>wq", "<cmd>q<cr>")
 -- Window nav
