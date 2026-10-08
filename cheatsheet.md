@@ -2,6 +2,16 @@
 
 Leader is `<Space>`. This file collects what is worth remembering about this config.
 
+## File sidebar (`neo-tree`)
+
+| Key              | What it does                                                           |
+|------------------|------------------------------------------------------------------------|
+| `<leader>ff`     | Open the sidebar if needed, reveal the current file and focus it       |
+| `<leader>ts`     | Toggle the sidebar                                                     |
+| `<leader><Esc>`  | Clear search highlight, close the sidebar and all other buffers        |
+
+Press `?` inside the tree for its own mappings (add, delete, rename, copy, move...).
+
 ## Notes plugin (`neoroam`)
 
 Org-roam-style backlinks for Markdown notes. Design: [ADR-0001](docs/adr/0001-roam-style-backlinks.md).

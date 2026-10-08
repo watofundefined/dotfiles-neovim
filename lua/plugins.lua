@@ -144,6 +144,32 @@ require("lazy").setup({
   },
 
   {
+    "nvim-neo-tree/neo-tree.nvim",
+    branch = "v3.x",
+    cmd = "Neotree",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-tree/nvim-web-devicons",
+      "MunifTanjim/nui.nvim",
+    },
+    keys = {
+      { "<leader>ff", "<cmd>Neotree focus reveal left<cr>", desc = "Focus current file in sidebar" },
+      { "<leader>ts", "<cmd>Neotree toggle left<cr>", desc = "Toggle file sidebar" },
+    },
+    opts = {
+      close_if_last_window = true,
+      popup_border_style = "rounded",
+      window = { width = 30 },
+      filesystem = {
+        follow_current_file = { enabled = true },
+        hijack_netrw_behavior = "open_default",
+        use_libuv_file_watcher = true,
+        filtered_items = { hide_dotfiles = false, hide_gitignored = true },
+      },
+    },
+  },
+
+  {
     "kylechui/nvim-surround",
     version = "^4.0.0", -- Use for stability; omit to use `main` branch for the latest features
     event = "VeryLazy",

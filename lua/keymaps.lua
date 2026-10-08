@@ -174,10 +174,13 @@ keymap("n", "<leader>ws", "<cmd>split<cr><C-w>=")
 keymap("n", "<leader>w+", "<cmd>vertical resize +2<CR>")
 keymap("n", "<leader>w-", "<cmd>vertical resize -2<CR>")
  
--- Clear search
-keymap("n", "<leader><Esc>", "<cmd>nohlsearch<cr>")
+-- Clear search, close all other buffers and the file sidebar
+keymap("n", "<leader><Esc>", function()
+    vim.cmd("nohlsearch")
+    pcall(vim.cmd, "Neotree close")
+    close_other_buffers()
+end, { desc = "Clear search highlight and close all other buffers and the file sidebar" })
  
-keymap("n", "<leader>ff", "<cmd>Vexplore!30<cr>", { noremap = true })
 
 -- Git
 keymap("n", "<leader>gc", "<cmd>LazyGit<cr>", { desc = "Open LazyGit" })
