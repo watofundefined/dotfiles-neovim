@@ -10,6 +10,8 @@ Leader is `<Space>`. This file collects what is worth remembering about this con
 | `<leader>ts`     | Toggle the sidebar                                                     |
 | `<leader><Esc>`  | Clear search highlight, close the sidebar and all other buffers        |
 
+Inside the tree, `<Esc>` returns focus to the previous window (or the first regular one).
+
 Press `?` inside the tree for its own mappings (add, delete, rename, copy, move...).
 
 ## Notes plugin (`neoroam`)

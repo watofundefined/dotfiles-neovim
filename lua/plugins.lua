@@ -159,7 +159,32 @@ require("lazy").setup({
     opts = {
       close_if_last_window = true,
       popup_border_style = "rounded",
-      window = { width = 30 },
+      window = {
+        width = 30,
+        mappings = {
+          -- Esc leaves the sidebar: back to the previous window if it is a
+          -- regular one, otherwise the first regular window.
+          ["<esc>"] = function(state)
+            pcall(require("neo-tree.sources.common.commands").cancel, state)
+            local function is_regular(win)
+              local buf = vim.api.nvim_win_get_buf(win)
+              return vim.api.nvim_win_get_config(win).relative == ""
+                  and vim.bo[buf].filetype ~= "neo-tree"
+            end
+            local prev = vim.fn.win_getid(vim.fn.winnr("#"))
+            if prev ~= 0 and is_regular(prev) then
+              vim.api.nvim_set_current_win(prev)
+              return
+            end
+            for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+              if is_regular(win) then
+                vim.api.nvim_set_current_win(win)
+                return
+              end
+            end
+          end,
+        },
+      },
       filesystem = {
         follow_current_file = { enabled = true },
         hijack_netrw_behavior = "open_default",
