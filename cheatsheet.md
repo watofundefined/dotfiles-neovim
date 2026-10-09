@@ -21,6 +21,7 @@ Press `?` inside the tree for its own mappings (add, delete, rename, copy, move.
 | `<leader>cff`   | Copy the current filename                                       |
 | `<leader>cfa`   | Copy the full path of the current file                          |
 | `<leader>cfr`   | Copy the path relative to the git root (no-op outside a repo)   |
+| `<leader>cfg`   | Copy the GitHub URL of the current file (branch, or commit if detached) |
 
 ## Notes plugin (`neoroam`)
 

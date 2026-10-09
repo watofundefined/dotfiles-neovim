@@ -166,12 +166,8 @@ local function current_file_path()
     return path
 end
 
-local function copy_relative_path_from_git_root()
-    local path = current_file_path()
-    if not path then
-        return
-    end
-
+-- Returns git root and the file's path relative to it (forward slashes), or nil outside a repo
+local function git_root_and_relative(path)
     local dir = vim.fn.fnamemodify(path, ":p:h")
     local result = vim.system({ "git", "-C", dir, "rev-parse", "--show-toplevel" }, { text = true }):wait()
     if result.code ~= 0 then
@@ -193,11 +189,61 @@ local function copy_relative_path_from_git_root()
         return
     end
 
-    local relative = full:sub(#root + 2)
-    if is_windows then
+    return root, full:sub(#root + 2)
+end
+
+local function copy_relative_path_from_git_root()
+    local path = current_file_path()
+    if not path then
+        return
+    end
+    local _, relative = git_root_and_relative(path)
+    if not relative then
+        return
+    end
+    if vim.fn.has("win32") == 1 then
         relative = relative:gsub("/", "\\")
     end
     copy_to_clipboard(relative, "relative path")
+end
+
+local function copy_github_url()
+    local path = current_file_path()
+    if not path then
+        return
+    end
+    local root, relative = git_root_and_relative(path)
+    if not root then
+        vim.notify("Not in a git repository", vim.log.levels.WARN)
+        return
+    end
+
+    local function git(...)
+        local r = vim.system({ "git", "-C", root, ... }, { text = true }):wait()
+        return r.code == 0 and vim.trim(r.stdout) or nil
+    end
+
+    local remote = git("remote", "get-url", "origin")
+    -- Handles git@github.com:user/repo.git, ssh://git@github.com/user/repo.git and https://github.com/user/repo.git
+    local slug = remote and remote:match("github%.com[:/](.+)$")
+    if not slug then
+        vim.notify("No GitHub 'origin' remote found", vim.log.levels.WARN)
+        return
+    end
+    slug = slug:gsub("/$", ""):gsub("%.git$", "")
+
+    -- Branch name, or commit hash when HEAD is detached
+    local ref = git("symbolic-ref", "--short", "-q", "HEAD") or git("rev-parse", "HEAD")
+    if not ref then
+        vim.notify("Could not determine git ref", vim.log.levels.WARN)
+        return
+    end
+
+    local function encode(str)
+        return (str:gsub("[^%w%-._~/]", function(c) return string.format("%%%02X", c:byte()) end))
+    end
+    local url = ("https://github.com/%s/blob/%s/%s"):format(slug, encode(ref), encode(relative))
+    copy_to_clipboard(url, "GitHub URL")
 end
 
 vim.g.mapleader = " "
@@ -218,6 +264,7 @@ keymap("n", "<leader>cfa", function()
     if path then copy_to_clipboard(vim.fn.fnamemodify(path, ":p"), "full path") end
 end, { desc = "Copy full path of current file" })
 keymap("n", "<leader>cfr", copy_relative_path_from_git_root, { desc = "Copy file path relative to git root" })
+keymap("n", "<leader>cfg", copy_github_url, { desc = "Copy GitHub URL of current file" })
 -- Close window
 keymap("n", "<leader>wq", "<cmd>q<cr>")
 -- Window nav
