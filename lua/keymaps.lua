@@ -207,7 +207,7 @@ local function copy_relative_path_from_git_root()
     copy_to_clipboard(relative, "relative path")
 end
 
-local function copy_github_url()
+local function copy_github_url(line_range)
     local path = current_file_path()
     if not path then
         return
@@ -243,6 +243,14 @@ local function copy_github_url()
         return (str:gsub("[^%w%-._~/]", function(c) return string.format("%%%02X", c:byte()) end))
     end
     local url = ("https://github.com/%s/blob/%s/%s"):format(slug, encode(ref), encode(relative))
+    if line_range then
+        -- GitHub renders markdown, so line anchors only work on the raw view (?plain=1)
+        if vim.tbl_contains({ "md", "markdown", "mdx" }, relative:match("%.(%w+)$") or "") then
+            url = url .. "?plain=1"
+        end
+        local first, last = line_range[1], line_range[2]
+        url = url .. (first == last and ("#L%d"):format(first) or ("#L%d-L%d"):format(first, last))
+    end
     copy_to_clipboard(url, "GitHub URL")
 end
 
@@ -264,7 +272,13 @@ keymap("n", "<leader>cfa", function()
     if path then copy_to_clipboard(vim.fn.fnamemodify(path, ":p"), "full path") end
 end, { desc = "Copy full path of current file" })
 keymap("n", "<leader>cfr", copy_relative_path_from_git_root, { desc = "Copy file path relative to git root" })
-keymap("n", "<leader>cfg", copy_github_url, { desc = "Copy GitHub URL of current file" })
+keymap("n", "<leader>cfg", function() copy_github_url() end, { desc = "Copy GitHub URL of current file" })
+keymap("v", "<leader>cfg", function()
+    -- "v" is the other end of the selection while still in visual mode
+    local a, b = vim.fn.line("v"), vim.fn.line(".")
+    copy_github_url({ math.min(a, b), math.max(a, b) })
+    vim.api.nvim_feedkeys(vim.keycode("<Esc>"), "n", false)
+end, { desc = "Copy GitHub URL of selected lines" })
 -- Close window
 keymap("n", "<leader>wq", "<cmd>q<cr>")
 -- Window nav
