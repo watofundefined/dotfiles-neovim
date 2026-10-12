@@ -90,6 +90,15 @@ require("lazy").setup({
     "sindrets/diffview.nvim",
     cmd = { "DiffviewOpen", "DiffviewFileHistory", "DiffviewClose" },
     dependencies = { "nvim-lua/plenary.nvim" },
+    opts = function()
+      -- Buffer-local in Diffview, so they override the global gitsigns hunk maps.
+      local a = require("diffview.actions")
+      local nav = {
+        { "n", "<leader>gj", a.select_next_entry, { desc = "Next history entry" } },
+        { "n", "<leader>gk", a.select_prev_entry, { desc = "Previous history entry" } },
+      }
+      return { keymaps = { view = nav, file_history_panel = nav } }
+    end,
   },
 
   {

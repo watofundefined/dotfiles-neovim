@@ -24,6 +24,16 @@ Press `?` inside the tree for its own mappings (add, delete, rename, copy, move.
 | `<leader>cfg`   | Copy the GitHub URL of the current file (branch, or commit if detached) |
 | `<leader>cfg` (visual) | Copy the GitHub URL with the selected lines (`#L5-L9`); markdown files get `?plain=1` |
 
+## Git file history (`diffview`)
+
+| Key           | What it does                                                         |
+|---------------|----------------------------------------------------------------------|
+| `<leader>gh`  | Open the history of the current file                                 |
+| `<leader>gj`  | Inside the history view: go to the next change (next entry in the list) |
+| `<leader>gk`  | Inside the history view: go to the previous change                   |
+
+Outside Diffview, `<leader>gj` / `<leader>gk` jump between git hunks (gitsigns).
+
 ## Notes plugin (`neoroam`)
 
 Org-roam-style backlinks for Markdown notes. Design: [ADR-0001](docs/adr/0001-roam-style-backlinks.md).
