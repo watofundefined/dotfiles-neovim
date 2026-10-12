@@ -29,8 +29,10 @@ Press `?` inside the tree for its own mappings (add, delete, rename, copy, move.
 | Key           | What it does                                                         |
 |---------------|----------------------------------------------------------------------|
 | `<leader>gh`  | Open the history of the current file                                 |
-| `<leader>gj`  | Inside the history view: go to the next change (next entry in the list) |
-| `<leader>gk`  | Inside the history view: go to the previous change                   |
+| `<leader>gj`  | In the diff: jump to the next change (`]c`) of the shown entry       |
+| `<leader>gk`  | In the diff: jump to the previous change (`[c`)                      |
+| `<leader>gJ`  | Show the next history entry (next commit in the list)                |
+| `<leader>gK`  | Show the previous history entry                                      |
 
 Outside Diffview, `<leader>gj` / `<leader>gk` jump between git hunks (gitsigns).
 

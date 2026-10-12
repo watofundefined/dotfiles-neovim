@@ -93,11 +93,15 @@ require("lazy").setup({
     opts = function()
       -- Buffer-local in Diffview, so they override the global gitsigns hunk maps.
       local a = require("diffview.actions")
-      local nav = {
-        { "n", "<leader>gj", a.select_next_entry, { desc = "Next history entry" } },
-        { "n", "<leader>gk", a.select_prev_entry, { desc = "Previous history entry" } },
+      local entries = {
+        { "n", "<leader>gJ", a.select_next_entry, { desc = "Next history entry" } },
+        { "n", "<leader>gK", a.select_prev_entry, { desc = "Previous history entry" } },
       }
-      return { keymaps = { view = nav, file_history_panel = nav } }
+      local view = vim.list_extend({
+        { "n", "<leader>gj", "]c", { desc = "Next change in diff" } },
+        { "n", "<leader>gk", "[c", { desc = "Previous change in diff" } },
+      }, entries)
+      return { keymaps = { view = view, file_history_panel = entries } }
     end,
   },
 
