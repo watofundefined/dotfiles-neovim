@@ -320,7 +320,15 @@ keymap("n", "<leader>bb", builtin.buffers, { desc = "Telescope buffers" })
 
 -- keymap("n", "<leader>ff", builtin.find_files, { desc = "Telescope find files" })
 keymap("n", "<leader>o", builtin.find_files, { desc = "Telescope find files" })
-keymap("n", "<leader>spp", builtin.live_grep, { desc = "Telescope live grep" })
+keymap("n", "<leader>spp", function()
+  builtin.live_grep({
+    -- <C-Space> is swallowed by macOS/Terminal.app, so also bind <C-f> to fuzzy-refine.
+    attach_mappings = function(_, map)
+      map("i", "<C-f>", require("telescope.actions").to_fuzzy_refine)
+      return true
+    end,
+  })
+end, { desc = "Telescope live grep" })
 keymap("n", "<leader>spt", function()
   builtin.live_grep({ glob_pattern = { "*.ts", "*.tsx", "*.js", "*.jsx" } })
 end, { desc = "Telescope live grep (TypeScript files)" })

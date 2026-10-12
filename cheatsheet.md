@@ -36,6 +36,13 @@ Press `?` inside the tree for its own mappings (add, delete, rename, copy, move.
 
 Outside Diffview, `<leader>gj` / `<leader>gk` jump between git hunks (gitsigns).
 
+## Live grep (`<leader>spp`)
+
+| Key     | What it does                                                                 |
+|---------|------------------------------------------------------------------------------|
+| `<C-f>` | Fuzzy-filter the current results (matches `path:line:text`, so filenames work); preview stays |
+| `<C-q>` | Send results to the quickfix list                                            |
+
 ## Notes plugin (`neoroam`)
 
 Org-roam-style backlinks for Markdown notes. Design: [ADR-0001](docs/adr/0001-roam-style-backlinks.md).
