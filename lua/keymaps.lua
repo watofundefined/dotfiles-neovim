@@ -365,3 +365,50 @@ keymap("n", "<leader>nb", "<cmd>NeoroamBacklinks<cr>", { desc = "Toggle backlink
 keymap("n", "<leader>nf", "<cmd>NeoroamFollow<cr>", { desc = "Follow note link under cursor" })
 keymap("n", "<leader>ni", "<cmd>NeoroamInsert<cr>", { desc = "Insert note link" })
 keymap("n", "<leader>nn", "<cmd>NeoroamNew<cr>", { desc = "New note" })
+
+-- Bookmarks (tomasky/bookmarks.nvim)
+local bookmarks = require("bookmarks")
+keymap("n", "<leader><CR>", bookmarks.bookmark_toggle, { desc = "Toggle bookmark on current line" })
+keymap("n", "<leader>j", bookmarks.bookmark_next, { desc = "Next bookmark in file" })
+keymap("n", "<leader>k", bookmarks.bookmark_prev, { desc = "Previous bookmark in file" })
+
+-- Jump to the next/previous bookmark across all files (sorted by path, then line), wrapping around.
+local function bookmark_jump_global(step)
+  require("bookmarks.actions").sync_all()
+  local all = {}
+  for file, marks in pairs(require("bookmarks.config").config.cache.data) do
+    for lnum in pairs(marks) do table.insert(all, { file = file, lnum = tonumber(lnum) }) end
+  end
+  if #all == 0 then return end
+  table.sort(all, function(a, b)
+    if a.file ~= b.file then return a.file < b.file end
+    return a.lnum < b.lnum
+  end)
+  local cur = vim.uv.fs_realpath(vim.api.nvim_buf_get_name(0)) or ""
+  local cur_lnum = vim.api.nvim_win_get_cursor(0)[1]
+  -- cmp > 0 means entry `m` lies after the cursor in sort order
+  local function cmp(m)
+    if m.file ~= cur then return m.file < cur and -1 or 1 end
+    return m.lnum - cur_lnum
+  end
+  local target
+  if step > 0 then
+    for _, m in ipairs(all) do if cmp(m) > 0 then target = m break end end
+    target = target or all[1]
+  else
+    for i = #all, 1, -1 do if cmp(all[i]) < 0 then target = all[i] break end end
+    target = target or all[#all]
+  end
+  if target.file ~= cur then vim.cmd.edit(vim.fn.fnameescape(target.file)) end
+  vim.api.nvim_win_set_cursor(0, { target.lnum, 0 })
+end
+keymap("n", "<leader>J", function() bookmark_jump_global(1) end, { desc = "Next bookmark (any file)" })
+keymap("n", "<leader>K", function() bookmark_jump_global(-1) end, { desc = "Previous bookmark (any file)" })
+
+-- Harpoon
+local harpoon = require("harpoon")
+keymap("n", "<leader>m+", function() harpoon:list():add() end, { desc = "Harpoon add file" })
+keymap("n", "<leader>m-", function() harpoon:list():remove() end, { desc = "Harpoon remove file" })
+keymap("n", "<leader>mm", function() harpoon.ui:toggle_quick_menu(harpoon:list()) end, { desc = "Harpoon quick menu" })
+keymap("n", "<leader>mj", function() harpoon:list():next() end, { desc = "Harpoon next file" })
+keymap("n", "<leader>mk", function() harpoon:list():prev() end, { desc = "Harpoon previous file" })
