@@ -353,6 +353,8 @@ for _, lhs in ipairs({ "<C-/>", "<C-_>" }) do
   keymap("v", lhs, "gc", { remap = true, desc = "Toggle comment on selection" })
 end
 
+keymap("n", "<leader><leader>r", "<cmd>restart<cr>", { desc = "Restart Neovim (reloads config)" })
+
 keymap("v", "<leader>p", '"_dP', { desc = "Paste without losing current register (Primeagen on master.dev)" })
 keymap("v", "<leader>y", '"+y', { desc = "Yank into system clipboard if user doesn't have system clipboard on (Primeagen on master.dev)" })
 -- gv re-highlights the previous visual selection
