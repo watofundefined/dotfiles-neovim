@@ -347,6 +347,12 @@ keymap("n", "<leader>qq", "<cmd>copen<cr>", { desc = "Open quick fix list" })
 keymap("n", "<leader>qj", "<cmd>cnext<cr>", { desc = "Go to next quick fix list result" })
 keymap("n", "<leader>qk", "<cmd>cprev<cr>", { desc = "Go to previous quick fix list result" })
 
+-- Ctrl+/ toggle comment (built-in gc, uses commentstring/treesitter, no LSP needed); most terminals send <C-_> for Ctrl+/
+for _, lhs in ipairs({ "<C-/>", "<C-_>" }) do
+  keymap("n", lhs, "gcc+", { remap = true, desc = "Toggle comment and move to next line" })
+  keymap("v", lhs, "gc", { remap = true, desc = "Toggle comment on selection" })
+end
+
 keymap("v", "<leader>p", '"_dP', { desc = "Paste without losing current register (Primeagen on master.dev)" })
 keymap("v", "<leader>y", '"+y', { desc = "Yank into system clipboard if user doesn't have system clipboard on (Primeagen on master.dev)" })
 -- gv re-highlights the previous visual selection
