@@ -355,6 +355,31 @@ end
 
 keymap("n", "<leader><leader>r", "<cmd>restart<cr>", { desc = "Restart Neovim (reloads config)" })
 
+-- Format buffer with the nearest project-local prettier (via stdin, so unsaved edits work and
+-- prettier resolves its own config from the file path). Walks up for monorepos.
+local function prettier()
+  local file = vim.api.nvim_buf_get_name(0)
+  if file == "" then return vim.notify("Prettier: buffer has no file name", vim.log.levels.WARN) end
+  local dir = vim.fs.dirname(file)
+  local exe = "prettier" .. (vim.fn.has("win32") == 1 and ".cmd" or "")
+  local bin
+  for _, nm in ipairs(vim.fs.find("node_modules", { path = dir, upward = true, type = "directory", limit = math.huge })) do
+    local cand = vim.fs.joinpath(nm, ".bin", exe)
+    if vim.fn.executable(cand) == 1 then bin = cand break end
+  end
+  if not bin then return vim.notify("Prettier: no local node_modules/.bin/prettier found", vim.log.levels.ERROR) end
+  local input = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\n") .. "\n"
+  local res = vim.system({ bin, "--stdin-filepath", file }, { stdin = input, cwd = dir, text = true }):wait()
+  if res.code ~= 0 then return vim.notify("Prettier failed:\n" .. (res.stderr or ""), vim.log.levels.ERROR) end
+  if res.stdout == input then return end
+  local view = vim.fn.winsaveview()
+  vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split(res.stdout:gsub("\n$", ""), "\n", { plain = true }))
+  vim.fn.winrestview(view)
+end
+vim.api.nvim_create_user_command("Prettier", prettier, { desc = "Format buffer with local prettier" })
+-- needs a terminal that sends Ctrl+Alt+f (macOS: enable "Use Option as Meta"); :Prettier always works
+keymap("n", "<C-A-f>", prettier, { desc = "Format buffer with local prettier" })
+
 keymap("v", "<leader>p", '"_dP', { desc = "Paste without losing current register (Primeagen on master.dev)" })
 keymap("v", "<leader>y", '"+y', { desc = "Yank into system clipboard if user doesn't have system clipboard on (Primeagen on master.dev)" })
 -- gv re-highlights the previous visual selection
