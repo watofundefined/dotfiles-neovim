@@ -3,12 +3,18 @@ local M = {}
 
 M.store = vim.fn.stdpath("data") .. "/httpyac/env.json"
 
-local function read_json(path)
+-- warn: notify when the file exists but is not valid JSON (otherwise it just looks empty).
+local function read_json(path, warn)
   local f = io.open(path)
   if not f then return nil end
-  local ok, data = pcall(vim.json.decode, f:read("*a"))
+  local text = f:read("*a"):gsub("^\239\187\191", "") -- Windows editors add a UTF-8 BOM
   f:close()
-  return ok and type(data) == "table" and data or nil
+  local ok, data = pcall(vim.json.decode, text)
+  if not (ok and type(data) == "table") then
+    if warn then vim.notify("httpyac: invalid JSON in " .. path .. (ok and "" or ": " .. tostring(data)), vim.log.levels.WARN) end
+    return nil
+  end
+  return data
 end
 
 function M.root(file)
@@ -19,7 +25,7 @@ end
 function M.names(root)
   local set = {}
   for _, f in ipairs({ "http-client.env.json", "http-client.private.env.json" }) do
-    for k in pairs(read_json(root .. "/" .. f) or {}) do
+    for k in pairs(read_json(root .. "/" .. f, true) or {}) do
       if k ~= "$shared" then set[k] = true end
     end
   end

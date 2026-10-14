@@ -46,6 +46,11 @@ do
   write("http-client.private.env.json", { dev = {}, local_ = {} })
   check("env names", env.names(root), { "dev", "local_", "prod" })
   check("env root", env.root(root .. "/sub/x.http"), root)
+  write("http-client.private.env.json", { dev = {}, local_ = {} })
+  local bom = io.open(root .. "/http-client.private.env.json", "w")
+  bom:write("\239\187\191" .. vim.json.encode({ dev = {}, local_ = {} }))
+  bom:close()
+  check("env names with BOM", env.names(root), { "dev", "local_", "prod" })
   env.store = vim.fn.tempname() .. "/nested/env.json"
   check("env get unset", env.get(root), nil)
   env.set(root, "prod")
