@@ -114,3 +114,14 @@ Colors: `NeoroamHeading`, `NeoroamPath`, `NeoroamLink`, `NeoroamCurrentLink`.
 ```
 nvim --headless -u NONE -l lua/neoroam/tests/run.lua
 ```
+
+## HTTP requests (`lua/httpyac`)
+
+Runs the request under the cursor in a `.http` file with the `httpyac` CLI (`npm install -g httpyac`). The response opens in a right-hand split, titled with status, env and time; `q` closes it.
+
+| Key / command | Action |
+| --- | --- |
+| `<leader>hr` / `:HttpRun` | Run the request under the cursor (unsaved edits included) |
+| `<leader>he` / `:HttpEnv` | Pick the environment from `http-client(.private).env.json`; remembered per project |
+
+Extracting to its own repo: copy `lua/httpyac/` and call `require("httpyac").setup()`. Tests: `nvim --headless -u NONE -l lua/httpyac/tests/run.lua`.

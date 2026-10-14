@@ -135,10 +135,10 @@ require("lazy").setup({
     lazy = false,
     build = ':TSUpdate',
     config = function()
-      require('nvim-treesitter').install { 'markdown', 'markdown_inline', 'bash', 'javascript', 'typescript', 'tsx' }
+      require('nvim-treesitter').install { 'markdown', 'markdown_inline', 'bash', 'javascript', 'typescript', 'tsx', 'http', 'json', 'html', 'xml' }
 
       vim.api.nvim_create_autocmd("FileType", {
-        pattern = { "markdown", "sh", "bash", "javascript", "typescript", "typescriptreact" },
+        pattern = { "markdown", "sh", "bash", "javascript", "typescript", "typescriptreact", "http", "json", "html", "xml" },
         callback = function()
           vim.treesitter.start()
         end,

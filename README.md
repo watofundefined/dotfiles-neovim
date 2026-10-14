@@ -28,6 +28,12 @@ Optional:
 
   Without them the config still works, just with no TS/JS LSP.
 
+- Global `httpyac`, only for running `.http` requests (`lua/httpyac/`):
+
+  ```sh
+  npm install -g httpyac
+  ```
+
 ### Nerd Font (optional)
 
 neo-tree, Telescope and Octo use icons from a Nerd Font. Without one, the terminal shows

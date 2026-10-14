@@ -7,3 +7,4 @@ require("lsp")
 require("keymaps")
 
 require("neoroam").setup({ notes_root = "Roam" })
+require("httpyac").setup()
