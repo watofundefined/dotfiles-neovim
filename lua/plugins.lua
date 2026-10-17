@@ -221,6 +221,14 @@ require("lazy").setup({
   },
   { "tomasky/bookmarks.nvim", opts = {} },
 
+  -- Extra colorschemes (from ThePrimeagen/neovimrc); try with :colorscheme tokyonight-storm / rose-pine
+  {
+    "folke/tokyonight.nvim",
+    lazy = true,
+    opts = { style = "storm", styles = { comments = { italic = false }, keywords = { italic = false } } },
+  },
+  { "rose-pine/neovim", name = "rose-pine", lazy = true },
+
   {
     "MeanderingProgrammer/render-markdown.nvim",
     ft = "markdown",
