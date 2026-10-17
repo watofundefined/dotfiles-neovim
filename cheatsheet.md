@@ -14,6 +14,13 @@ Inside the tree, `<Esc>` returns focus to the previous window (or the first regu
 
 Press `?` inside the tree for its own mappings (add, delete, rename, copy, move...).
 
+## Formatting
+
+| Key / command        | What it does                                                       |
+|----------------------|--------------------------------------------------------------------|
+| `<leader>fm`, `:Rumdl` | Format the current markdown buffer with global `rumdl`           |
+| `<C-A-f>`, `:Prettier` | Format the buffer with the project-local `prettier`              |
+
 ## Copy file paths
 
 | Key             | What it does                                                    |

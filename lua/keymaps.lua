@@ -380,6 +380,25 @@ vim.api.nvim_create_user_command("Prettier", prettier, { desc = "Format buffer w
 -- needs a terminal that sends Ctrl+Alt+f (macOS: enable "Use Option as Meta"); :Prettier always works
 keymap("n", "<C-A-f>", prettier, { desc = "Format buffer with local prettier" })
 
+-- Format a markdown buffer with global rumdl (via stdin, so unsaved edits work and rumdl finds its config from the path).
+local function rumdl()
+  if vim.bo.filetype ~= "markdown" then return vim.notify("rumdl: not a markdown buffer", vim.log.levels.WARN) end
+  if vim.fn.executable("rumdl") == 0 then return vim.notify("rumdl: not installed", vim.log.levels.ERROR) end
+  local file = vim.api.nvim_buf_get_name(0)
+  local input = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\n") .. "\n"
+  local cmd = { "rumdl", "fmt", "-", "--quiet" }
+  if file ~= "" then vim.list_extend(cmd, { "--stdin-filename", file }) end
+  local res = vim.system(cmd, { stdin = input, text = true }):wait()
+  -- exit 1 just means unfixable violations remain; stdout is still the formatted text
+  if res.stdout == "" then return vim.notify("rumdl failed:\n" .. (res.stderr or ""), vim.log.levels.ERROR) end
+  if res.stdout == input then return end
+  local view = vim.fn.winsaveview()
+  vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split(res.stdout:gsub("\n$", ""), "\n", { plain = true }))
+  vim.fn.winrestview(view)
+end
+vim.api.nvim_create_user_command("Rumdl", rumdl, { desc = "Format markdown buffer with rumdl" })
+keymap("n", "<leader>fm", rumdl, { desc = "Format markdown buffer with rumdl" })
+
 keymap("v", "<leader>p", '"_dP', { desc = "Paste without losing current register (Primeagen on master.dev)" })
 keymap("v", "<leader>y", '"+y', { desc = "Yank into system clipboard if user doesn't have system clipboard on (Primeagen on master.dev)" })
 -- gv re-highlights the previous visual selection

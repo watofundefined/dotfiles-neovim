@@ -18,6 +18,11 @@ Required:
 Optional:
 
 - `lazygit` for `:LazyGit` (`<leader>gc`)
+- [`rumdl`](https://rumdl.dev/getting-started) for formatting markdown with `<leader>fm` / `:Rumdl`
+
+  ```sh
+  brew install rumdl            # macOS
+  ```
 - `make` and a C compiler to build `telescope-fzf-native` (Telescope still works without it)
 - A Nerd Font, so file icons render (see below)
 - Global TypeScript 5.9.3 and `typescript-language-server`, only if you want LSP for TS/JS (`ts_ls`, enabled in `lua/lsp.lua`). The language server needs `tsserver.js`, which ships with the `typescript` package:
