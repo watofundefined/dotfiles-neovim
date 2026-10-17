@@ -238,7 +238,10 @@ require("lazy").setup({
     "MeanderingProgrammer/render-markdown.nvim",
     ft = "markdown",
     dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
-    opts = {},
+    opts = {
+      -- no heading icons, so the raw #, ##, ### markers stay visible (background highlights remain)
+      heading = { icons = {} },
+    },
   },
 
   {
