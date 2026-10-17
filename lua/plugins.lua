@@ -151,6 +151,7 @@ require("lazy").setup({
           vim.wo[0][0].foldmethod = "expr"
           vim.wo[0][0].foldexpr = "v:lua.vim.treesitter.foldexpr()"
           vim.wo[0][0].foldlevel = 99 -- start with everything open
+          vim.wo[0][0].conceallevel = 2 -- hide **, backticks, link URLs
         end,
       })
     end,
@@ -219,6 +220,13 @@ require("lazy").setup({
     -- end
   },
   { "tomasky/bookmarks.nvim", opts = {} },
+
+  {
+    "MeanderingProgrammer/render-markdown.nvim",
+    ft = "markdown",
+    dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
+    opts = {},
+  },
 
   {
     "ThePrimeagen/harpoon",
