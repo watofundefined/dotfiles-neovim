@@ -8,7 +8,8 @@ opt.termguicolors = true
 opt.signcolumn = "yes"
  
 -- vim.cmd [[colorscheme slate]]
-vim.cmd [[colorscheme unokai]]
+-- Colorscheme is set in plugins.lua (tokyonight.nvim), since plugins load after this file.
+-- vim.cmd [[colorscheme unokai]]
 
 -- Distinguish the bracket under the cursor from its matching counterpart.
 -- Native matchparen.vim highlights both with the same `MatchParen` group;

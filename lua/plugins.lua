@@ -224,8 +224,13 @@ require("lazy").setup({
   -- Extra colorschemes (from ThePrimeagen/neovimrc); try with :colorscheme tokyonight-storm / rose-pine
   {
     "folke/tokyonight.nvim",
-    lazy = true,
+    lazy = false,
+    priority = 1000,
     opts = { style = "storm", styles = { comments = { italic = false }, keywords = { italic = false } } },
+    config = function(_, opts)
+      require("tokyonight").setup(opts)
+      vim.cmd.colorscheme("tokyonight-storm")
+    end,
   },
   { "rose-pine/neovim", name = "rose-pine", lazy = true },
 
