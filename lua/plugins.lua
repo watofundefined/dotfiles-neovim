@@ -1,6 +1,8 @@
 -- See also:
 -- - https://lazy.folke.io/spec/examples
 -- - nvim/lua/config/lazy.lua
+local tokyonight_opts = { style = "storm", styles = { comments = { italic = false }, keywords = { italic = false } } }
+
 require("lazy").setup({
   {
       'nvim-telescope/telescope.nvim',
@@ -152,6 +154,9 @@ require("lazy").setup({
           vim.wo[0][0].foldexpr = "v:lua.vim.treesitter.foldexpr()"
           vim.wo[0][0].foldlevel = 99 -- start with everything open
           vim.wo[0][0].conceallevel = 2 -- hide **, backticks, link URLs
+          vim.wo[0][0].wrap = true
+          vim.wo[0][0].linebreak = true -- wrap at word boundaries
+          vim.wo[0][0].breakindent = true -- align continuation lines with list text
         end,
       })
     end,
@@ -226,13 +231,35 @@ require("lazy").setup({
     "folke/tokyonight.nvim",
     lazy = false,
     priority = 1000,
-    opts = { style = "storm", styles = { comments = { italic = false }, keywords = { italic = false } } },
-    config = function(_, opts)
-      require("tokyonight").setup(opts)
+    config = function()
+      require("tokyonight").setup(tokyonight_opts)
       vim.cmd.colorscheme("tokyonight-storm")
     end,
   },
   { "rose-pine/neovim", name = "rose-pine", lazy = true },
+
+  -- Centered 80-column writing mode (adapted from ThePrimeagen/neovimrc zenmode.lua)
+  {
+    "folke/zen-mode.nvim",
+    keys = { { "<leader>tz", "<cmd>ZenMode<cr>", desc = "Toggle zen mode" } },
+    opts = function()
+      -- Transparent background while in zen mode (tokyonight only); restores the previous state on exit.
+      local was_transparent
+      local function transparent(on)
+        if not (vim.g.colors_name or ""):find("^tokyonight") then return end
+        require("tokyonight").setup(vim.tbl_extend("force", tokyonight_opts, { transparent = on }))
+        vim.cmd.colorscheme(vim.g.colors_name)
+      end
+      return {
+        window = { width = 80, options = { number = false, relativenumber = false, colorcolumn = "0" } },
+        on_open = function()
+          was_transparent = vim.api.nvim_get_hl(0, { name = "Normal" }).bg == nil
+          transparent(true)
+        end,
+        on_close = function() transparent(was_transparent) end,
+      }
+    end,
+  },
 
   {
     "MeanderingProgrammer/render-markdown.nvim",
