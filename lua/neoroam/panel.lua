@@ -120,7 +120,7 @@ local function do_refresh(src_buf, src_win)
   S.seq = S.seq + 1
   local seq = S.seq
   if not (fm and fm.id) then
-    return message("This note has no id yet.")
+    return message("This note has no id yet (:NeoroamEnsureId).")
   end
   local dir = scope.dir(path)
   local title = frontmatter.title(fm, path)

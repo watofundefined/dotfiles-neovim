@@ -108,6 +108,8 @@ aliases, daily notes, unlinked mentions, forward-link panel, graph view.
 - **Duplicate ids on follow** warn and open a `vim.ui.select` over the matching files,
   instead of failing.
 - **Adding an id** from the picker (to a file or loaded buffer) emits a `vim.notify` line.
+- `:NeoroamEnsureId` adds an id to the current note on demand (never automatically); it is
+  a no-op if one exists.
 - Link text is cosmetic and frozen at insertion; renaming a note does not rewrite links.
 
 ## Consequences

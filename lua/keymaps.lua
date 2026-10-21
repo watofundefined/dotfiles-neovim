@@ -425,6 +425,7 @@ keymap("n", "<leader>nb", "<cmd>NeoroamBacklinks<cr>", { desc = "Toggle backlink
 keymap("n", "<leader>nf", "<cmd>NeoroamFollow<cr>", { desc = "Follow note link under cursor" })
 keymap("n", "<leader>ni", "<cmd>NeoroamInsert<cr>", { desc = "Insert note link" })
 keymap("n", "<leader>nn", "<cmd>NeoroamNew<cr>", { desc = "New note" })
+keymap("n", "<leader>nd", "<cmd>NeoroamEnsureId<cr>", { desc = "Add id to current note" })
 
 -- Bookmarks (tomasky/bookmarks.nvim)
 local bookmarks = require("bookmarks")

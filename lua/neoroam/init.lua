@@ -7,6 +7,7 @@ function M.setup(opts)
   cmd("NeoroamBacklinks", function() require("neoroam.panel").toggle() end, { desc = "Toggle backlinks panel" })
   cmd("NeoroamFollow", function() require("neoroam.notes").follow() end, { desc = "Follow id link under cursor" })
   cmd("NeoroamInsert", function() require("neoroam.picker").insert() end, { desc = "Insert link to a note" })
+  cmd("NeoroamEnsureId", function() require("neoroam.notes").ensure_current_id() end, { desc = "Add an id to the current note" })
   cmd("NeoroamNew", function() require("neoroam.notes").new() end, { desc = "Create a new note" })
 end
 

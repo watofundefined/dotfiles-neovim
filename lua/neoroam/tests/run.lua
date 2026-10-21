@@ -207,6 +207,17 @@ do
   check("ensure_id buffer: title", ltitle, "L")
   check("ensure_id buffer: id inserted and saved", vim.fn.readfile(loaded)[2], "id: " .. lid)
 
+  -- ensure_current_id: adds once, then is a no-op
+  local cur = repo .. "/Roam/cur.md"
+  vim.fn.writefile({ "body" }, cur)
+  vim.cmd("edit " .. cur)
+  notes.ensure_current_id()
+  local cid = frontmatter.parse(vim.fn.readfile(cur)).id
+  check("ensure_current_id: id added", links.is_uuid(cid), true)
+  vim.cmd("edit!")
+  notes.ensure_current_id()
+  check("ensure_current_id: idempotent", frontmatter.parse(vim.fn.readfile(cur)).id, cid)
+
   -- following a duplicate id offers a choice instead of failing
   local D = "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
   vim.fn.writefile({ "---", "id: " .. D, "---" }, repo .. "/Roam/d1.md")

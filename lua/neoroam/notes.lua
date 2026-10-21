@@ -61,6 +61,19 @@ function M.ensure_id(path)
   return id, title
 end
 
+--- Add an id to the current note if it lacks one.
+function M.ensure_current_id()
+  local path = vim.api.nvim_buf_get_name(0)
+  if path == "" then
+    return notify("buffer has no file", vim.log.levels.WARN)
+  end
+  local fm = frontmatter.parse(vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  if fm and fm.id then
+    return notify("note already has id " .. fm.id)
+  end
+  M.ensure_id(path)
+end
+
 --- Insert `[title](id:uuid)` for the note at `path` after the cursor of the current window.
 function M.insert_link(path)
   local id, title = M.ensure_id(path)
