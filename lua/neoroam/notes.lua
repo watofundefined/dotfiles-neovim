@@ -46,6 +46,7 @@ function M.ensure_id(path)
         vim.cmd("silent write")
       end)
     end
+    notify("added id to " .. path)
     return id, title
   end
   local lines = vim.fn.readfile(path)
@@ -56,6 +57,7 @@ function M.ensure_id(path)
   end
   local id = M.new_uuid()
   vim.fn.writefile(frontmatter.insert_id(lines, id), path)
+  notify("added id to " .. path)
   return id, title
 end
 
@@ -81,10 +83,18 @@ function M.follow()
     if #paths == 0 then
       return notify("no note with id " .. link.id, vim.log.levels.WARN)
     end
-    if #paths > 1 then
-      return notify("duplicate id " .. link.id .. ":\n" .. table.concat(paths, "\n"), vim.log.levels.ERROR)
+    local function open(path)
+      vim.cmd.edit(vim.fn.fnameescape(path))
     end
-    vim.cmd.edit(vim.fn.fnameescape(paths[1]))
+    if #paths > 1 then
+      notify("duplicate id " .. link.id, vim.log.levels.WARN)
+      return vim.ui.select(paths, { prompt = "Duplicate id, open:" }, function(choice)
+        if choice then
+          open(choice)
+        end
+      end)
+    end
+    open(paths[1])
   end)
 end
 

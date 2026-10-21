@@ -102,6 +102,14 @@ repo stays TeleVim-agnostic, per TeleVim ADR-0009).
 **Out of scope.** Tags are a separate plugin and a separate decision. Also deferred:
 aliases, daily notes, unlinked mentions, forward-link panel, graph view.
 
+## Amendments
+
+- **Self-links** are not backlinks: the panel drops hits from the current note's own file.
+- **Duplicate ids on follow** warn and open a `vim.ui.select` over the matching files,
+  instead of failing.
+- **Adding an id** from the picker (to a file or loaded buffer) emits a `vim.notify` line.
+- Link text is cosmetic and frozen at insertion; renaming a note does not rewrite links.
+
 ## Consequences
 
 - No database, schema, or reindexing; the files are the only source of truth.

@@ -14,5 +14,7 @@ Goal: org-roam-style backlinks while editing in Neovim.
   (title prompt, optional sub-folder choice, `YYYYMMDDHHMMSS-slug.md`).
 - Parsing and ripgrep logic built test-first in pure Lua; fixtures in
   `lua/neoroam/tests/fixtures/` are the contract that TeleVim vendors.
+- Self-links excluded from backlinks; duplicate-id follow offers a picker; picker
+  notifies when it adds an id (ADR-0001 amendments).
 
 ADR: [0001](adr/0001-roam-style-backlinks.md)

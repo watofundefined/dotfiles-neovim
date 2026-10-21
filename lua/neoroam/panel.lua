@@ -133,7 +133,7 @@ local function do_refresh(src_buf, src_win)
       return message("Error: " .. tostring(err))
     end
     render(title, fm.id, hits, dir)
-  end)
+  end, path)
 end
 
 local function schedule_refresh(buf, win)

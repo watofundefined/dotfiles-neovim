@@ -125,6 +125,12 @@ do
   })
 end
 do
+  local _, hits = await(function(cb)
+    rg.backlinks(vault, A, cb, vault .. "/20240102000000-bullets.md")
+  end)
+  check("backlinks exclude own file", #hits, 2)
+end
+do
   local _, paths = await(function(cb)
     rg.find_by_id(vault, A, cb)
   end)
@@ -200,6 +206,23 @@ do
   local lid, ltitle = notes.ensure_id(loaded)
   check("ensure_id buffer: title", ltitle, "L")
   check("ensure_id buffer: id inserted and saved", vim.fn.readfile(loaded)[2], "id: " .. lid)
+
+  -- following a duplicate id offers a choice instead of failing
+  local D = "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
+  vim.fn.writefile({ "---", "id: " .. D, "---" }, repo .. "/Roam/d1.md")
+  vim.fn.writefile({ "---", "id: " .. D, "---" }, repo .. "/Roam/d2.md")
+  vim.cmd("edit " .. repo .. "/Roam/src.md")
+  vim.api.nvim_buf_set_lines(0, 0, -1, false, { "[x](id:" .. D .. ")" })
+  local offered
+  vim.ui.select = function(items, _, cb)
+    offered = items
+    cb(items[1])
+  end
+  notes.follow()
+  vim.wait(5000, function() return offered ~= nil end, 10)
+  table.sort(offered)
+  check("follow duplicate: both offered", vim.tbl_map(function(p) return p:sub(#repo + 2) end, offered), { "Roam/d1.md", "Roam/d2.md" })
+  check("follow duplicate: chosen opened", vim.api.nvim_buf_get_name(0):match("/(d%d%.md)$") ~= nil, true)
 
   vim.cmd("edit " .. repo .. "/Roam/anchor.md")
   local order = {}

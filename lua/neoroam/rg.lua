@@ -51,8 +51,10 @@ local function cmd(extra, scope)
 end
 
 --- Hits for every `](id:<id>)` under `scope`, one per source line.
+--- Hits inside the `exclude` file (a note's own self-links) are dropped.
 --- cb(err, hits). Returns the process handle (use :kill()).
-function M.backlinks(scope, id, cb)
+function M.backlinks(scope, id, cb, exclude)
+  exclude = exclude and vim.fs.normalize(exclude)
   return run(cmd({ "-F", "-i", "-e", "](id:" .. id .. ")" }, scope), function(err, hits)
     if err then
       return cb(err)
@@ -60,7 +62,7 @@ function M.backlinks(scope, id, cb)
     local seen, out = {}, {}
     for _, h in ipairs(hits) do
       local key = h.path .. ":" .. h.lnum
-      if not seen[key] then
+      if not seen[key] and vim.fs.normalize(h.path) ~= exclude then
         seen[key] = true
         out[#out + 1] = h
       end
