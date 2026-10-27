@@ -111,6 +111,13 @@ aliases, daily notes, unlinked mentions, forward-link panel, graph view.
 - `:NeoroamEnsureId` adds an id to the current note on demand (never automatically); it is
   a no-op if one exists.
 - Link text is cosmetic and frozen at insertion; renaming a note does not rewrite links.
+- **Query behaviour is part of the contract**, not just the format. `fixtures/queries.json`
+  holds expected results over `fixtures/vault/` for: id -> file(s) (the `id:` line must sit
+  inside the frontmatter; a body-only match does not count; duplicates return every file),
+  and backlinks (a note's own file is never one of its backlinks; sorted by title,
+  case-insensitive, then path). Changing any of these means changing `queries.json` first,
+  then the plugin and TeleVim. The panel's preview text (ids stripped to `[text]`) is
+  plugin-only; TeleVim renders previews differently on purpose.
 
 ## Consequences
 

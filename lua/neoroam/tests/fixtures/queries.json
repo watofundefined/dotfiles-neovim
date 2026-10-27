@@ -1,0 +1,23 @@
+{
+  "_comment": "Expected results over ./vault, shared with TeleVim (ADR-0001 Contract). Paths are relative to the vault, sorted. A note's own file is never one of its backlinks; `order` is title (case-insensitive) then path.",
+  "backlinks": [
+    {
+      "id": "620b6220-a3b9-44b4-970e-b6d221fa1dca",
+      "hits": ["20240102000000-bullets.md:5", "20240108000000-noid.md:2", "People/20240103000000-upper.md:4"],
+      "order": ["20240102000000-bullets.md", "20240108000000-noid.md", "People/20240103000000-upper.md"]
+    },
+    {
+      "id": "5e1f5e1f-5e1f-45e1-85e1-5e1f5e1f5e1f",
+      "hits": ["20240110000000-linksself.md:5"],
+      "order": ["20240110000000-linksself.md"]
+    },
+    { "id": "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee", "hits": [], "order": [] }
+  ],
+  "resolve": [
+    { "id": "620b6220-a3b9-44b4-970e-b6d221fa1dca", "paths": ["20240101000000-target.md"] },
+    { "id": "dddddddd-dddd-4ddd-8ddd-dddddddddddd", "paths": ["20240104000000-dup1.md", "People/20240104000001-dup2.md"] },
+    { "id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc", "paths": ["20240106000000-realc.md"] },
+    { "id": "abababab-abab-4bab-8bab-abababababab", "paths": ["20240107000000-quoted.md"] },
+    { "id": "00000000-0000-4000-8000-00000000000a", "paths": [] }
+  ]
+}

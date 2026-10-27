@@ -106,51 +106,42 @@ local function await(start)
   return err, res
 end
 local A = "620b6220-a3b9-44b4-970e-b6d221fa1dca"
-do
-  local err, hits = await(function(cb)
-    rg.backlinks(vault, A, cb)
+local queries = json(fx .. "/queries.json")
+local function rel(p)
+  return p:sub(#vault + 2)
+end
+for _, q in ipairs(queries.resolve) do
+  local _, paths = await(function(cb)
+    rg.find_by_id(vault, q.id, cb)
+  end)
+  check("resolve " .. q.id, vim.tbl_map(rel, paths), q.paths)
+end
+for _, q in ipairs(queries.backlinks) do
+  local _, own = await(function(cb)
+    rg.find_by_id(vault, q.id, cb)
+  end)
+  local _, hits = await(function(cb)
+    rg.backlinks(vault, q.id, cb, own[1])
   end)
   local names = {}
-  for _, h in ipairs(hits or {}) do
-    names[#names + 1] = h.path:sub(#vault + 2) .. ":" .. h.lnum
+  for _, h in ipairs(hits) do
+    names[#names + 1] = rel(h.path) .. ":" .. h.lnum
   end
   table.sort(names)
-  check("backlinks", { err, names }, {
-    nil,
-    {
-      "20240102000000-bullets.md:5",
-      "20240108000000-noid.md:2",
-      "People/20240103000000-upper.md:4",
-    },
+  check("backlinks " .. q.id, names, q.hits)
+  local view = require("neoroam.render").build({
+    title = "t", id = q.id, hits = hits, scope_dir = vault, preview_lines = 3,
+    load = require("neoroam.note").read_disk,
   })
-end
-do
-  local _, hits = await(function(cb)
-    rg.backlinks(vault, A, cb, vault .. "/20240102000000-bullets.md")
-  end)
-  check("backlinks exclude own file", #hits, 2)
-end
-do
-  local _, paths = await(function(cb)
-    rg.find_by_id(vault, A, cb)
-  end)
-  check("find_by_id single", vim.tbl_map(function(p) return p:sub(#vault + 2) end, paths), { "20240101000000-target.md" })
-  local _, dups = await(function(cb)
-    rg.find_by_id(vault, "dddddddd-dddd-4ddd-8ddd-dddddddddddd", cb)
-  end)
-  check("find_by_id duplicates", #dups, 2)
-  local _, c = await(function(cb)
-    rg.find_by_id(vault, "cccccccc-cccc-4ccc-8ccc-cccccccccccc", cb)
-  end)
-  check("find_by_id ignores body-only match", vim.tbl_map(function(p) return p:sub(#vault + 2) end, c), { "20240106000000-realc.md" })
-  local _, q = await(function(cb)
-    rg.find_by_id(vault, "abababab-abab-4bab-8bab-abababababab", cb)
-  end)
-  check("find_by_id quoted id", #q, 1)
-  local _, none = await(function(cb)
-    rg.find_by_id(vault, "00000000-0000-4000-8000-00000000000a", cb)
-  end)
-  check("find_by_id none", #none, 0)
+  local order, seen = {}, {}
+  for i in ipairs(view.lines) do
+    local r = view.rows[i]
+    if r and not seen[r.path] then
+      seen[r.path] = true
+      order[#order + 1] = rel(r.path)
+    end
+  end
+  check("backlinks order " .. q.id, order, q.order)
 end
 
 -- panel text
