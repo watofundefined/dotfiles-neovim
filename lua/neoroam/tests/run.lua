@@ -269,5 +269,41 @@ do
   vim.fn.delete(repo, "rf")
 end
 
+-- backlinks view
+do
+  local render = require("neoroam.render")
+  local A, B = "620b6220-a3b9-44b4-970e-b6d221fa1dca", "11111111-1111-4111-8111-111111111111"
+  local notes_by_path = {
+    ["/r/b.md"] = { title = "Beta", lines = { "x", "see [T](id:" .. A .. ") and [o](id:" .. B .. ")", "", "y [T](id:" .. A .. ")" } },
+    ["/r/a.md"] = { title = "alpha", lines = { "[T](id:" .. A .. ")" } },
+  }
+  local function build(hits)
+    return render.build({
+      title = "T", id = A, scope_dir = "/r", preview_lines = 3, hits = hits,
+      load = function(p) return notes_by_path[p] end,
+    })
+  end
+  local v = build({ { path = "/r/b.md", lnum = 4 }, { path = "/r/b.md", lnum = 2 }, { path = "/r/a.md", lnum = 1 }, { path = "/r/gone.md", lnum = 1 } })
+  check("view: heading", v.lines[1], "Backlinks: T (4)")
+  local function at(text)
+    for i, l in ipairs(v.lines) do
+      if l == text then return i end
+    end
+  end
+  check("view: sorted by title", { at("/r/gone.md") < at("alpha"), at("alpha") < at("Beta") }, { true, true })
+  check("view: hits by line", at("line 2") < at("line 4"), true)
+  local pv = at("│ see [T] and [o]")
+  check("view: preview strips ids", pv ~= nil, true)
+  check("view: row maps to hit", v.rows[pv], { path = "/r/b.md", lnum = 2 })
+  check("view: missing source has no preview", v.lines[at("gone.md") + 1], "")
+  local groups = {}
+  for _, h in ipairs(v.highlights) do
+    if h[1] == pv - 1 and h[4]:find("Link") then groups[#groups + 1] = h[4] end
+  end
+  check("view: current vs other link highlight", groups, { "NeoroamCurrentLink", "NeoroamLink" })
+  check("view: empty", build({}).lines, { "Backlinks: T (0)", "", "No backlinks." })
+  check("view: message", render.message("hi").lines, { "hi" })
+end
+
 print(string.format("%d checks, %d failed", total, failed))
 os.exit(failed == 0 and 0 or 1)

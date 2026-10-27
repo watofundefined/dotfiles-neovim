@@ -1,15 +1,13 @@
 -- Toggleable backlinks side buffer.
 local config = require("neoroam.config")
 local frontmatter = require("neoroam.frontmatter")
-local preview = require("neoroam.preview")
-local render_text = require("neoroam.render")
+local render = require("neoroam.render")
 local rg = require("neoroam.rg")
 local scope = require("neoroam.scope")
 
 local M = {}
 
 local ns = vim.api.nvim_create_namespace("neoroam")
-local PREFIX = "│ "
 
 vim.api.nvim_set_hl(0, "NeoroamHeading", { link = "Title", default = true })
 vim.api.nvim_set_hl(0, "NeoroamPath", { link = "Comment", default = true })
@@ -42,69 +40,19 @@ local function set_lines(lines, hl)
   end
 end
 
-local function render(title, id, hits, scope_dir)
-  local max = config.get().preview_lines
-  local by_path, order = {}, {}
-  for _, h in ipairs(hits) do
-    if not by_path[h.path] then
-      by_path[h.path] = { path = h.path, title = rg.title_of(h.path), hits = {} }
-      order[#order + 1] = by_path[h.path]
-    end
-    table.insert(by_path[h.path].hits, h)
-  end
-  table.sort(order, function(a, b)
-    if a.title:lower() ~= b.title:lower() then
-      return a.title:lower() < b.title:lower()
-    end
-    return a.path < b.path
-  end)
+local function show(view)
+  S.rows = view.rows
+  set_lines(view.lines, view.highlights)
+end
 
-  local lines, hl, rows = {}, {}, {}
-  -- spans: { start, finish, group } byte columns; `group` alone highlights the whole line
-  local function add(text, group, row, spans, offset)
-    lines[#lines + 1] = text
-    rows[#lines] = row
-    if group then
-      hl[#hl + 1] = { #lines - 1, 0, #text, group }
-    end
-    for _, sp in ipairs(spans or {}) do
-      hl[#hl + 1] = { #lines - 1, sp[1] + offset, sp[2] + offset, sp[3] }
-    end
-  end
-  add(string.format("Backlinks: %s (%d)", title, #hits), "NeoroamHeading")
-  for _, g in ipairs(order) do
-    table.sort(g.hits, function(a, b)
-      return a.lnum < b.lnum
-    end)
-    local src = vim.fn.readfile(g.path)
-    add("")
-    add(g.title, "NeoroamHeading", g.hits[1])
-    add(g.path:sub(#scope_dir + 2), "NeoroamPath", g.hits[1])
-    for _, h in ipairs(g.hits) do
-      local b = preview.block(src, h.lnum, max)
-      add("", nil, h)
-      add(string.format("line %d", h.lnum), "NeoroamPath", h)
-      for _, l in ipairs(b.lines) do
-        local text, spans = render_text.preview_line(l, id)
-        for _, sp in ipairs(spans) do
-          sp[3] = sp[3] == "current" and "NeoroamCurrentLink" or "NeoroamLink"
-        end
-        add(PREFIX .. text, nil, h, spans, #PREFIX)
-        hl[#hl + 1] = { #lines - 1, 0, #PREFIX, "NeoroamPath" }
-      end
-    end
-  end
-  if #hits == 0 then
-    add("")
-    add("No backlinks.", "NeoroamPath")
-  end
-  S.rows = rows
-  set_lines(lines, hl)
+-- shortcut: reads the source note from disk each time; swap for the Note module when it lands.
+local function load(path)
+  local ok, lines = pcall(vim.fn.readfile, path)
+  return { title = rg.title_of(path), lines = ok and lines or {} }
 end
 
 local function message(msg)
-  S.rows = {}
-  set_lines({ msg }, { { 0, 0, #msg, "NeoroamPath" } })
+  show(render.message(msg))
 end
 
 local function do_refresh(src_buf, src_win)
@@ -132,7 +80,14 @@ local function do_refresh(src_buf, src_win)
     if err then
       return message("Error: " .. tostring(err))
     end
-    render(title, fm.id, hits, dir)
+    show(render.build({
+      title = title,
+      id = fm.id,
+      hits = hits,
+      scope_dir = dir,
+      preview_lines = config.get().preview_lines,
+      load = load,
+    }))
   end, path)
 end
 

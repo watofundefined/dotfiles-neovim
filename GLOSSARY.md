@@ -32,3 +32,7 @@ Two or more notes sharing one id. Reported with a warning, and following a link 
 
 **Preview**:
 The block of text around a backlink's line, capped at a configurable number of lines.
+
+**Backlinks panel**:
+The side buffer listing every Backlink to the current Note, grouped by source Note, each with its Preview.
+_Avoid_: Sidebar, pane
