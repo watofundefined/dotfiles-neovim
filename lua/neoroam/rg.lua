@@ -1,5 +1,5 @@
 -- ripgrep-backed lookups. No index: everything is computed on demand (ADR-0001).
-local frontmatter = require("neoroam.frontmatter")
+local note = require("neoroam.note")
 
 local M = {}
 
@@ -83,8 +83,8 @@ function M.find_by_id(scope, id, cb)
     for _, h in ipairs(hits) do
       if not seen[h.path] then
         seen[h.path] = true
-        local lines = vim.fn.readfile(h.path)
-        local fm = frontmatter.parse(lines)
+        -- disk, not buffer: h.lnum comes from ripgrep, which reads disk
+        local fm = note.read_disk(h.path).fm
         if fm and fm.id == id:lower() and h.lnum >= 2 and h.lnum < fm.last then
           paths[#paths + 1] = h.path
         end
@@ -104,12 +104,6 @@ function M.files(scope)
   end
   table.sort(out)
   return out
-end
-
---- Title of the note at `path`: frontmatter `title:` or the filename fallback.
-function M.title_of(path)
-  local ok, lines = pcall(vim.fn.readfile, path, "", 100)
-  return frontmatter.title(ok and frontmatter.parse(lines) or nil, path)
 end
 
 return M

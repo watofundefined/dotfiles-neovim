@@ -1,65 +1,13 @@
 -- Note-level operations: ids, link insertion, creation.
-local frontmatter = require("neoroam.frontmatter")
 local links = require("neoroam.links")
 local util = require("neoroam.util")
 local scope = require("neoroam.scope")
 
 local M = {}
 
-local function notify(msg, level)
-  vim.notify("neoroam: " .. msg, level or vim.log.levels.INFO)
-end
+local note = require("neoroam.note")
+local notify = note.notify
 M.notify = notify
-
-function M.new_uuid()
-  return util.uuid_from_bytes(vim.uv.random(16))
-end
-
-local function loaded_buf(path)
-  local want = vim.fs.normalize(path)
-  for _, b in ipairs(vim.api.nvim_list_bufs()) do
-    if vim.api.nvim_buf_is_loaded(b) and vim.api.nvim_buf_get_name(b) ~= "" then
-      if vim.fs.normalize(vim.api.nvim_buf_get_name(b)) == want then
-        return b
-      end
-    end
-  end
-end
-
---- Returns (id, title) of the note at `path`, adding an `id` first if it lacks one.
---- A loaded buffer is edited (and written if it was unmodified); otherwise the file is.
-function M.ensure_id(path)
-  local buf = loaded_buf(path)
-  if buf then
-    local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
-    local fm = frontmatter.parse(lines)
-    local title = frontmatter.title(fm, path)
-    if fm and fm.id then
-      return fm.id, title
-    end
-    local id = M.new_uuid()
-    local was_modified = vim.bo[buf].modified
-    local idx, ins = frontmatter.id_insertion(lines, id)
-    vim.api.nvim_buf_set_lines(buf, idx, idx, false, ins)
-    if not was_modified then
-      vim.api.nvim_buf_call(buf, function()
-        vim.cmd("silent write")
-      end)
-    end
-    notify("added id to " .. path)
-    return id, title
-  end
-  local lines = vim.fn.readfile(path)
-  local fm = frontmatter.parse(lines)
-  local title = frontmatter.title(fm, path)
-  if fm and fm.id then
-    return fm.id, title
-  end
-  local id = M.new_uuid()
-  vim.fn.writefile(frontmatter.insert_id(lines, id), path)
-  notify("added id to " .. path)
-  return id, title
-end
 
 --- Add an id to the current note if it lacks one.
 function M.ensure_current_id()
@@ -67,16 +15,16 @@ function M.ensure_current_id()
   if path == "" then
     return notify("buffer has no file", vim.log.levels.WARN)
   end
-  local fm = frontmatter.parse(vim.api.nvim_buf_get_lines(0, 0, -1, false))
-  if fm and fm.id then
-    return notify("note already has id " .. fm.id)
+  local n = note.read(path)
+  if n.id then
+    return notify("note already has id " .. n.id)
   end
-  M.ensure_id(path)
+  note.ensure_id(path)
 end
 
 --- Insert `[title](id:uuid)` for the note at `path` after the cursor of the current window.
 function M.insert_link(path)
-  local id, title = M.ensure_id(path)
+  local id, title = note.ensure_id(path)
   vim.api.nvim_put({ links.format(title, id) }, "c", true, true)
 end
 
@@ -134,7 +82,7 @@ local function create(dir, folder, title)
   local path = string.format("%s/%s-%s.md", target, util.file_stamp(now), util.slug(title))
   local content = table.concat({
     "---",
-    "id: " .. M.new_uuid(),
+    "id: " .. note.new_uuid(),
     "title: " .. title,
     "created: " .. util.created_stamp(now),
     "---",

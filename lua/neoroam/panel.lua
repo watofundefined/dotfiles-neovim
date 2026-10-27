@@ -1,6 +1,6 @@
 -- Toggleable backlinks side buffer.
 local config = require("neoroam.config")
-local frontmatter = require("neoroam.frontmatter")
+local note = require("neoroam.note")
 local render = require("neoroam.render")
 local rg = require("neoroam.rg")
 local scope = require("neoroam.scope")
@@ -45,10 +45,9 @@ local function show(view)
   set_lines(view.lines, view.highlights)
 end
 
--- shortcut: reads the source note from disk each time; swap for the Note module when it lands.
+-- Disk, not buffer: the hits' line numbers come from ripgrep, which reads disk.
 local function load(path)
-  local ok, lines = pcall(vim.fn.readfile, path)
-  return { title = rg.title_of(path), lines = ok and lines or {} }
+  return note.read_disk(path)
 end
 
 local function message(msg)
@@ -63,7 +62,8 @@ local function do_refresh(src_buf, src_win)
     S.note_win = src_win
   end
   local path = vim.api.nvim_buf_get_name(src_buf)
-  local fm = frontmatter.parse(vim.api.nvim_buf_get_lines(src_buf, 0, -1, false))
+  local n = note.read(path)
+  local fm = n.fm
   kill_job()
   S.seq = S.seq + 1
   local seq = S.seq
@@ -71,7 +71,7 @@ local function do_refresh(src_buf, src_win)
     return message("This note has no id yet (:NeoroamEnsureId).")
   end
   local dir = scope.dir(path)
-  local title = frontmatter.title(fm, path)
+  local title = n.title
   S.job = rg.backlinks(dir, fm.id, function(err, hits)
     if seq ~= S.seq then
       return -- superseded by a newer request

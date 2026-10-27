@@ -187,6 +187,7 @@ end
 -- notes: ids and creation against a throwaway git repo
 do
   local notes = require("neoroam.notes")
+  local note = require("neoroam.note")
   local repo = vim.uv.fs_realpath(vim.fn.tempname() .. "") or vim.fn.tempname()
   vim.fn.mkdir(repo .. "/Roam/People", "p")
   vim.fn.system({ "git", "-C", repo, "init", "-q" })
@@ -195,17 +196,23 @@ do
 
   local plain = repo .. "/Roam/20240101000000-plain.md"
   vim.fn.writefile({ "body" }, plain)
-  local id, title = notes.ensure_id(plain)
+  local id, title = note.ensure_id(plain)
   check("ensure_id file: title fallback", title, "plain")
   check("ensure_id file: written", vim.fn.readfile(plain), { "---", "id: " .. id, "---", "", "body" })
-  check("ensure_id file: stable on second call", (notes.ensure_id(plain)), id)
+  check("ensure_id file: stable on second call", (note.ensure_id(plain)), id)
 
   local loaded = repo .. "/Roam/loaded.md"
   vim.fn.writefile({ "---", "title: L", "---", "x" }, loaded)
   vim.cmd("edit " .. loaded)
-  local lid, ltitle = notes.ensure_id(loaded)
+  local lid, ltitle = note.ensure_id(loaded)
   check("ensure_id buffer: title", ltitle, "L")
   check("ensure_id buffer: id inserted and saved", vim.fn.readfile(loaded)[2], "id: " .. lid)
+
+  vim.cmd("edit " .. loaded)
+  vim.api.nvim_buf_set_lines(0, 1, 2, false, { "title: unsaved" })
+  check("note.read: sees unsaved buffer", note.read(loaded).title, "unsaved")
+  check("note.read_disk: sees disk", note.read_disk(loaded).title, "L")
+  vim.cmd("edit!")
 
   -- ensure_current_id: adds once, then is a no-op
   local cur = repo .. "/Roam/cur.md"

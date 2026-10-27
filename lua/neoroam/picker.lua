@@ -23,7 +23,7 @@ function M.insert()
         results = rg.files(dir),
         entry_maker = function(path)
           local rel = path:sub(#dir + 2)
-          local title = rg.title_of(path)
+          local title = require("neoroam.note").read_disk(path, 100).title
           return { value = path, display = title .. "  " .. rel, ordinal = title .. " " .. rel, path = path }
         end,
       }),
