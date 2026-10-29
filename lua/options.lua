@@ -19,9 +19,14 @@ opt.signcolumn = "yes"
 --     this theme for Title/MatchParen/Question, so it reads as "primary".
 --   * MatchParen (counterpart bracket) -> a muted gray box instead of gold,
 --     so it doesn't compete for attention with the cursor position.
+--     (light gray box when background=light, e.g. tokyonight-day)
 local function tune_paren_colors()
   vim.api.nvim_set_hl(0, "Cursor", { fg = "#262626", bg = "#ffd700" })
-  vim.api.nvim_set_hl(0, "MatchParen", { fg = "#cccccc", bg = "#4a4a4a", bold = true })
+  if vim.o.background == "light" then
+    vim.api.nvim_set_hl(0, "MatchParen", { fg = "#3760bf", bg = "#c4c8da", bold = true })
+  else
+    vim.api.nvim_set_hl(0, "MatchParen", { fg = "#cccccc", bg = "#4a4a4a", bold = true })
+  end
 end
 tune_paren_colors()
 vim.api.nvim_create_autocmd("ColorScheme", { callback = tune_paren_colors })

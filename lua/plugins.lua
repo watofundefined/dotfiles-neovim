@@ -3,6 +3,22 @@
 -- - nvim/lua/config/lazy.lua
 local tokyonight_opts = { style = "storm", styles = { comments = { italic = false }, keywords = { italic = false } } }
 
+-- macOS only: switch between tokyonight-storm and tokyonight-day to match the system
+-- appearance, also while running (on focus and every 5s). Leaves other colorschemes alone.
+local function follow_macos_appearance()
+  local cmd = { "defaults", "read", "-g", "AppleInterfaceStyle" }
+  local function apply(result)
+    if not (vim.g.colors_name or "tokyonight"):find("^tokyonight") then return end
+    -- Prints "Dark" in dark mode; fails (empty stdout) in light mode.
+    local name = (result.stdout or ""):match("Dark") and "tokyonight-storm" or "tokyonight-day"
+    if vim.g.colors_name ~= name then vim.cmd.colorscheme(name) end
+  end
+  apply(vim.system(cmd, { text = true }):wait())
+  local function check() vim.system(cmd, { text = true }, vim.schedule_wrap(apply)) end
+  vim.api.nvim_create_autocmd("FocusGained", { callback = check })
+  vim.uv.new_timer():start(5000, 5000, check)
+end
+
 require("lazy").setup({
   {
       'nvim-telescope/telescope.nvim',
@@ -233,7 +249,11 @@ require("lazy").setup({
     priority = 1000,
     config = function()
       require("tokyonight").setup(tokyonight_opts)
-      vim.cmd.colorscheme("tokyonight-storm")
+      if vim.fn.has("mac") == 1 then
+        follow_macos_appearance()
+      else
+        vim.cmd.colorscheme("tokyonight-storm")
+      end
     end,
   },
   { "rose-pine/neovim", name = "rose-pine", lazy = true },
